@@ -1,4 +1,5 @@
 from threading import Thread
+finished = False
 
 class Node():
     """A node class for A* Pathfinding"""
@@ -25,11 +26,12 @@ def aStar(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 		
     # Create start and end node
+    global finished
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
     end_node = Node(None, end)
     end_node.g = end_node.h = end_node.f = 0
-    
+	
     if(not isValidNode(maze, start_node) or not isValidNode(maze, end_node)):
       print("The start and end nodes are not walkable nodes.")
       return 
@@ -44,7 +46,11 @@ def aStar(maze, start, end):
     open_list.append(start_node)
 
     # Loop until you find the end
-    while len(open_list) > 0:
+    while len(open_list) > 0 and not finished:
+        
+        print("Open List: ")
+        for node in open_list:
+            print("({}, {})".format(*node.position))
 
         # Get the current node
         current_node = open_list[0]
@@ -60,6 +66,8 @@ def aStar(maze, start, end):
 
         # Found the goal
         if current_node == end_node:
+            finished = True
+            print("Finished! {}" .format(finished))
             path = []
             current = current_node
             while current is not None:
@@ -90,21 +98,20 @@ def aStar(maze, start, end):
 
         # Loop through children
         for child in children:
-					
+            
             # Child is on the closed list
             if child in closed_list:
-              continue
-
+                continue
+            
+            # Child is already in the open list
+            if child in open_list:
+                continue
+          
             # Create the f, g, and h values
             child.g = current_node.g + 1
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
             child.f = child.g + child.h
-
-            # Child is already in the open list
-            for open_node in open_list:
-                if child == open_node and child.g > open_node.g:
-                    continue
-
+            
             # Add the child to the open list
             open_list.append(child)
 
@@ -112,7 +119,7 @@ def sayHello(name):
   print("Hello from a thread {}!".format(name))
 
 def main():
-					#  0  1  2  3  4  5  6  7  8  9	
+			#  0  1  2  3  4  5  6  7  8  9	
     maze = [[0, 1, 0, 0, 1, 0, 0, 0, 0, 0], # 0
             [0, 1, 0, 0, 1, 0, 0, 0, 0, 0], # 1
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 2
@@ -126,13 +133,9 @@ def main():
 
     start = (0, 0)
     end = (9,9)
-
-    path = aStar(maze, start, end)
-    name = "Mariano"
-    thread = Thread(target = sayHello, args = (name, ))
-    thread.start()
-    thread.join()
     
+    finished = False
+    path = aStar(maze, start, end)
     
     print(path)
 
