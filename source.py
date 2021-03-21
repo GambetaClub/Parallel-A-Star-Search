@@ -1,4 +1,5 @@
 from threading import Thread
+import concurrent.futures
 finished = False
 
 class Node():
@@ -36,8 +37,6 @@ def aStar(maze, start, end):
       print("The start and end nodes are not walkable nodes.")
       return 
     
-    print("Start node: ({}, {})".format(*start_node.position))
-
     # Initialize both open and closed list
     open_list = []
     closed_list = []
@@ -56,6 +55,12 @@ def aStar(maze, start, end):
         current_node = open_list[0]
         current_index = 0
         for index, item in enumerate(open_list):
+            # if item.f == current_node.f:
+            #     print("HAY UNA DISPUTA!")
+            #     with concurrent.futures.ThreadPoolExecutor() as executor:
+            #         thread = executor.submit(aStar, maze, item.position, end)
+            #         path = thread.result()
+            #         print(path)
             if item.f < current_node.f:
                 current_node = item
                 current_index = index
@@ -63,6 +68,8 @@ def aStar(maze, start, end):
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
         closed_list.append(current_node)
+        
+        print("Current node --> ({}, {})".format(*current_node.position))
 
         # Found the goal
         if current_node == end_node:
@@ -117,14 +124,15 @@ def aStar(maze, start, end):
 
 def sayHello(name):
   print("Hello from a thread {}!".format(name))
+  return "Hello from outside of a thread."
 
 def main():
-			#  0  1  2  3  4  5  6  7  8  9	
+		#    0  1  2  3  4  5  6  7  8  9	
     maze = [[0, 1, 0, 0, 1, 0, 0, 0, 0, 0], # 0
             [0, 1, 0, 0, 1, 0, 0, 0, 0, 0], # 1
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 2
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 3
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 4
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # 4
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 5
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 6
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 7
