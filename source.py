@@ -33,7 +33,7 @@ def createPath(current_node):
         current = current.parent
     return path[::-1] # Return reversed path
 
-def aStar(maze, start, end):
+def aStar(maze, start, end, thread_number):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
     # Create start and end node
@@ -53,9 +53,11 @@ def aStar(maze, start, end):
 
     # Add the start node
     open_list.append(start_node)
+    counter = 1
 
     # Loop until you find the end
     while len(open_list) > 0 and not finished:
+        # print("FROM THREAD {}".format(thread_number))
         
         # Get the current node
         current_node = open_list[0]
@@ -64,22 +66,23 @@ def aStar(maze, start, end):
         
         if(len(open_list) > 1):
             for index, item in enumerate(open_list):
-                # if item.f == current_node.f:
-                #     string = "Mariano"
-                #     print("HAY UNA DISPUTA!")
-                #     print("Current node: -> ({}) -> F = {}" .format(current_node.position, current_node.f))
-                #     print("Item node: -> ({}) -> F = {}\n" .format(item.position, item.f))
-                #     t = Thread(target=aStar, args=(maze, item.position, end,)) 
-                #     t.start()
-                #     threads.append(t)
-                #     path = t.join()
+                if item.f == current_node.f and item != current_node:
+                    print(f"#{counter}~THERE IS A DISPUTE!")
+                    print("#{}~Current node: -> ({}) -> F = {}" .format(counter, current_node.position, current_node.f))
+                    print("#{}~Item node: -> ({}) -> F = {}\n" .format(counter, item.position, item.f))
                     
-                #     # thread = executor.submit(aStar, maze, item.position, end)
-                #     # result = thread.result()
-                #     # print(result)
-                #     # Putting the path together
+                    """SAYS HELLO FROM THREAD"""
+                    t = Thread(target=sayHello, args=("Mariano", len(threads)+1))
+                    # t = Thread(target=aStar, args=(maze, item.position, end, len(threads+1))) 
+                    threads.append(t)
+                    t.start()
                     
-                    # return the path
+                    # thread = executor.submit(aStar, maze, item.position, end)
+                    # result = thread.result()
+                    # print(result)
+                    # Putting the path together
+                    
+                    # return path
                     
                 if item.f < current_node.f:
                     current_node = item
@@ -89,7 +92,7 @@ def aStar(maze, start, end):
         open_list.pop(current_index)
         closed_list.append(current_node)
         
-        print("NODE CHOSEN --> ({}, {})".format(*current_node.position))
+        print(" #{}~NODE CHOSEN --> ({}, {}) \n\n".format(counter, *current_node.position))
 
         # Found the goal
         if current_node == end_node:
@@ -138,33 +141,43 @@ def aStar(maze, start, end):
 
         print("OPEN LIST")
         for node in open_list:
-            print("({}, {}) ~ F = {}".format(*node.position, node.f))
+            print("#{}~({}, {}) ~ F = {}".format(counter, *node.position, node.f))
+        print()
+        counter+=1
     
     # for t in threads:
     #     t.join()
 
-def sayHello(name):
-    time.sleep(5.0)
-    print(f"Hello from a thread {name}!")
+def sayHello(name, thread_number):
+    """This funtion was created with the intention of showing when a
+    thread would be created to divide the problem into subproblems"""
+    time.sleep(1.0)
+    print(f"Hello from thread #{thread_number} {name}!")
+
+"""NOTE THAT THERE ARE CASES WHERE THERE IS A DISPUT, HOWEVER THOSE NODES ARE
+NOT THE ONES THAT ARE GOING TO BE CHOSEN AT THE END. THE MAY HAVE THE SAME F COST,
+HOWEVER, THAT DOESN"T MEAN THAT AT THAT POINT THERE IS A BOTTLE NECK. THUS, THERE
+NO POINT TO PARALELLIZE THAT PART SINCE THERE IS NOTHING TO SPEED UP."""
 
 def main():
-		#    0  1  2  3  4  5  6  7  8  9	
-    maze = [[0, 1, 0, 0, 1, 0, 0, 0, 0, 0], # 0
-            [0, 1, 0, 0, 1, 0, 0, 0, 0, 0], # 1
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 2
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 3
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # 4
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 5
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 6
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 7
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 8
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]] # 9
+		#    0  1  2  3  4  5  6  7  8  9  10	
+    maze = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # 0
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 1
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 2
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 3
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 4
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 5
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 6
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 7
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 8
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 9
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]] # 10
 
-    start = (0, 0)
-    end = (9,9)
+    start = (5, 0)
+    end = (5,10)
     
     finished = False
-    path = aStar(maze, start, end)
+    path = aStar(maze, start, end, 0)
     
     print(path)
 
