@@ -73,10 +73,10 @@ def aStar(maze, start, end, thread_number):
                     
                     """SAYS HELLO FROM THREAD"""
                     t = Thread(target=sayHello, args=("Mariano", len(threads)+1))
-                    # t = Thread(target=aStar, args=(maze, item.position, end, len(threads+1))) 
+                
                     threads.append(t)
                     t.start()
-                    
+                    # t = Thread(target=aStar, args=(maze, item.position, end, len(threads+1)))     
                     # thread = executor.submit(aStar, maze, item.position, end)
                     # result = thread.result()
                     # print(result)
@@ -145,8 +145,8 @@ def aStar(maze, start, end, thread_number):
         print()
         counter+=1
     
-    # for t in threads:
-    #     t.join()
+    for t in threads:
+        t.join()
 
 def sayHello(name, thread_number):
     """This funtion was created with the intention of showing when a
