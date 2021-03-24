@@ -1,6 +1,9 @@
 from threading import Thread
 import concurrent.futures
+import time 
+
 finished = False
+threads = []
 
 class Node():
     """A node class for A* Pathfinding"""
@@ -21,11 +24,18 @@ def isValidNode(maze, node):
 		return False
 	else:
 		return True
-  
+
+def createPath(current_node):
+    path = []
+    current = current_node
+    while current is not None:
+        path.append(current.position)
+        current = current.parent
+    return path[::-1] # Return reversed path
 
 def aStar(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
-		
+
     # Create start and end node
     global finished
     start_node = Node(None, start)
@@ -47,40 +57,44 @@ def aStar(maze, start, end):
     # Loop until you find the end
     while len(open_list) > 0 and not finished:
         
-        print("Open List: ")
-        for node in open_list:
-            print("({}, {})".format(*node.position))
-
         # Get the current node
         current_node = open_list[0]
         current_index = 0
-        for index, item in enumerate(open_list):
-            # if item.f == current_node.f:
-            #     print("HAY UNA DISPUTA!")
-            #     with concurrent.futures.ThreadPoolExecutor() as executor:
-            #         thread = executor.submit(aStar, maze, item.position, end)
-            #         path = thread.result()
-            #         print(path)
-            if item.f < current_node.f:
-                current_node = item
-                current_index = index
-
+        print("Open list count: {} \n".format(len(open_list)))
+        
+        if(len(open_list) > 1):
+            for index, item in enumerate(open_list):
+                # if item.f == current_node.f:
+                #     string = "Mariano"
+                #     print("HAY UNA DISPUTA!")
+                #     print("Current node: -> ({}) -> F = {}" .format(current_node.position, current_node.f))
+                #     print("Item node: -> ({}) -> F = {}\n" .format(item.position, item.f))
+                #     t = Thread(target=aStar, args=(maze, item.position, end,)) 
+                #     t.start()
+                #     threads.append(t)
+                #     path = t.join()
+                    
+                #     # thread = executor.submit(aStar, maze, item.position, end)
+                #     # result = thread.result()
+                #     # print(result)
+                #     # Putting the path together
+                    
+                    # return the path
+                    
+                if item.f < current_node.f:
+                    current_node = item
+                    current_index = index
+                    
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
         closed_list.append(current_node)
         
-        print("Current node --> ({}, {})".format(*current_node.position))
+        print("NODE CHOSEN --> ({}, {})".format(*current_node.position))
 
         # Found the goal
         if current_node == end_node:
-            finished = True
-            print("Finished! {}" .format(finished))
-            path = []
-            current = current_node
-            while current is not None:
-                path.append(current.position)
-                current = current.parent
-            return path[::-1] # Return reversed path
+            path = createPath(current_node)
+            return path
 
         # Generate children
         children = []
@@ -122,9 +136,16 @@ def aStar(maze, start, end):
             # Add the child to the open list
             open_list.append(child)
 
+        print("OPEN LIST")
+        for node in open_list:
+            print("({}, {}) ~ F = {}".format(*node.position, node.f))
+    
+    # for t in threads:
+    #     t.join()
+
 def sayHello(name):
-  print("Hello from a thread {}!".format(name))
-  return "Hello from outside of a thread."
+    time.sleep(5.0)
+    print(f"Hello from a thread {name}!")
 
 def main():
 		#    0  1  2  3  4  5  6  7  8  9	
