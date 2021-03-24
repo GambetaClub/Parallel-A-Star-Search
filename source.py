@@ -2,7 +2,7 @@ from threading import Thread
 import concurrent.futures
 import time 
 
-finished = False
+# Array of threads
 threads = []
 
 class Node():
@@ -37,7 +37,6 @@ def aStar(maze, start, end, thread_number):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
     # Create start and end node
-    global finished
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
     end_node = Node(None, end)
@@ -56,7 +55,7 @@ def aStar(maze, start, end, thread_number):
     counter = 1
 
     # Loop until you find the end
-    while len(open_list) > 0 and not finished:
+    while len(open_list) > 0:
         # print("FROM THREAD {}".format(thread_number))
         
         # Get the current node
@@ -64,25 +63,31 @@ def aStar(maze, start, end, thread_number):
         current_index = 0
         print("Open list count: {} \n".format(len(open_list)))
         
+        # Loop until open list is empty
         if(len(open_list) > 1):
+            
+            # Loop through all nodes in open list
             for index, item in enumerate(open_list):
+                
+                # If two nodes have the same cost, it opens a disput
                 if item.f == current_node.f and item != current_node:
                     print(f"#{counter}~THERE IS A DISPUTE!")
                     print("#{}~Current node: -> ({}) -> F = {}" .format(counter, current_node.position, current_node.f))
                     print("#{}~Item node: -> ({}) -> F = {}\n" .format(counter, item.position, item.f))
                     
-                    """SAYS HELLO FROM THREAD"""
+                    #Say hello from a thread. This is only a test
                     t = Thread(target=sayHello, args=("Mariano", len(threads)+1))
-                
                     threads.append(t)
                     t.start()
-                    # t = Thread(target=aStar, args=(maze, item.position, end, len(threads+1)))     
-                    # thread = executor.submit(aStar, maze, item.position, end)
-                    # result = thread.result()
-                    # print(result)
-                    # Putting the path together
                     
-                    # return path
+                    """ APPROACH PROPOSED. Read note below"""
+                    
+                    # t = Thread(target=aStar, args=(maze, item.position, end, len(threads+1)))     
+                    # t = t.start()
+                    # path = thread.join()
+                    
+                    # Put the path together
+                    # Return path
                     
                 if item.f < current_node.f:
                     current_node = item
@@ -143,8 +148,11 @@ def aStar(maze, start, end, thread_number):
         for node in open_list:
             print("#{}~({}, {}) ~ F = {}".format(counter, *node.position, node.f))
         print()
+        
+        # Keeps track of the number of iterations
         counter+=1
     
+    # Wait for the threads to finish their execution
     for t in threads:
         t.join()
 
