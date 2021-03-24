@@ -68,26 +68,6 @@ def aStar(maze, start, end, thread_number):
             
             # Loop through all nodes in open list
             for index, item in enumerate(open_list):
-                
-                # If two nodes have the same cost, it opens a disput
-                if item.f == current_node.f and item != current_node:
-                    print(f"#{counter}~THERE IS A DISPUTE!")
-                    print("#{}~Current node: -> ({}) -> F = {}" .format(counter, current_node.position, current_node.f))
-                    print("#{}~Item node: -> ({}) -> F = {}\n" .format(counter, item.position, item.f))
-                    
-                    #Say hello from a thread. This is only a test
-                    t = Thread(target=sayHello, args=("Mariano", len(threads)+1))
-                    threads.append(t)
-                    t.start()
-                    
-                    """ APPROACH PROPOSED. Read note below"""
-                    
-                    # t = Thread(target=aStar, args=(maze, item.position, end, len(threads+1)))     
-                    # t = t.start()
-                    # path = thread.join()
-                    
-                    # Put the path together
-                    # Return path
                     
                 if item.f < current_node.f:
                     current_node = item
@@ -96,8 +76,6 @@ def aStar(maze, start, end, thread_number):
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
         closed_list.append(current_node)
-        
-        print(" #{}~NODE CHOSEN --> ({}, {}) \n\n".format(counter, *current_node.position))
 
         # Found the goal
         if current_node == end_node:
@@ -151,10 +129,7 @@ def aStar(maze, start, end, thread_number):
         
         # Keeps track of the number of iterations
         counter+=1
-    
-    # Wait for the threads to finish their execution
-    for t in threads:
-        t.join()
+
 
 def sayHello(name, thread_number):
     """This funtion was created with the intention of showing when a
