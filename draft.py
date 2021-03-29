@@ -16,6 +16,10 @@ class ThreadWithResult(threading.Thread):
             self.result = target(*args, **kwargs)
         super().__init__(group=group, target=function, name=name, daemon=daemon)
 
+class Path():
+    def __init__(self, path=None, common_node=None):
+        self.path = path
+        self.common_node = common_node
 
 class Node():
     """A node class for A* Pathfinding"""
@@ -48,11 +52,26 @@ def createPath(current_node, t_number):
     else:
         return path
 
-def coordinateResults(common_node, caller):
-    print(f"Common node: {common_node.position}")
+def getUpTo(test_list, val):
+    for ele in test_list:
+        if ele == val:
+            return
+        yield ele
+
+def coordinateResults(result1, result2):
     final_path = []
-    path1 = createPath(common_node, caller)
-    print("Path {}: {}".format(caller, path1))
+    common_node = None
+    if(result1.common_node):
+        common_node = result1.common_node.position
+        final_path = list(getUpTo(result1.path, common_node))
+    else:
+        common_node = result2.common_node.position
+        final_path = list(getUpTo(result2.path, common_node))
+    if common_node in result2.path:
+        final_path.extend(result2.path[1:])
+    else:
+        final_path.extend(result2.path)
+    print(final_path)
 
 def BiAStar(maze, start, end):
     # t1 = ThreadWithResult(target=sayHello, args=("Mariano",1,))
@@ -64,10 +83,8 @@ def BiAStar(maze, start, end):
     t2.start()
     t1.join()
     t2.join()
-    # print(t1.result)
-    # print(t2.result)
-    
-
+    coordinateResults(t1.result, t2.result)
+        
 def aStar(maze, start, end, self_list, other_list, t_number):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
@@ -98,7 +115,6 @@ def aStar(maze, start, end, self_list, other_list, t_number):
         #     return path
             
         print("#{}~Thread #{}".format(counter,t_number))
-        print()
         # Get the current node
         current_node = open_list[0]
         current_index = 0
@@ -121,7 +137,8 @@ def aStar(maze, start, end, self_list, other_list, t_number):
         """Check if they have found the same node"""
         if current_node.position in other_list:
             finished = True
-            coordinateResults(current_node, t_number)
+            path = Path(createPath(current_node, t_number), current_node)
+            return path
         
         # Found the goal
         if current_node == end_node:
@@ -170,7 +187,9 @@ def aStar(maze, start, end, self_list, other_list, t_number):
 
         # Keeps track of the number of iterations
         counter+=1
-    # coordinateResults(current_node, t_number)
+    if finished:
+        path = Path(createPath(current_node, t_number), current_node)
+        return path
 
 
 
