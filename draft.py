@@ -4,6 +4,11 @@ import time
 import threading, time, random
 
 mutex = Lock()
+finished = False
+
+list1 = []
+list2 = []
+
 
 class ThreadWithResult(threading.Thread):
     def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None):
@@ -43,19 +48,24 @@ def createPath(current_node, t_number):
     else:
         return path
 
+def coordinateResults(common_node, caller):
+    print(f"Common node: {common_node.position}")
+    final_path = []
+    path1 = createPath(common_node, caller)
+    print("Path {}: {}".format(caller, path1))
+
 def BiAStar(maze, start, end):
     # t1 = ThreadWithResult(target=sayHello, args=("Mariano",1,))
     # t2 = ThreadWithResult(target=sayHello, args=("Mariano",2,))
-    list1 = []
-    list2 = []
+    
     t1 = ThreadWithResult(target=aStar, args=(maze, start, end, list1, list2, 1))
     t2 = ThreadWithResult(target=aStar, args=(maze, end, start, list2, list1, 2))
     t1.start()
     t2.start()
     t1.join()
     t2.join()
-    print(t1.result)
-    print(t2.result)
+    # print(t1.result)
+    # print(t2.result)
     
 
 def aStar(maze, start, end, self_list, other_list, t_number):
@@ -78,10 +88,17 @@ def aStar(maze, start, end, self_list, other_list, t_number):
     # Add the start node
     open_list.append(start_node)
     counter = 1
+    global finished
 
     # Loop until you find the end
-    while len(open_list) > 0:
-        # print("#{}~Thread #{}".format(counter,t_number))
+    while len(open_list) > 0 and not finished:
+        # if finished:
+        #     print("WE FOUND THE SAME NODE")
+        #     path = createPath(current_node, t_number)
+        #     return path
+            
+        print("#{}~Thread #{}".format(counter,t_number))
+        print()
         # Get the current node
         current_node = open_list[0]
         current_index = 0
@@ -103,9 +120,8 @@ def aStar(maze, start, end, self_list, other_list, t_number):
         
         """Check if they have found the same node"""
         if current_node.position in other_list:
-            print("WE FOUND THE SAME NODE")
-            # path = createPath(current_node, t_number)
-            # return path
+            finished = True
+            coordinateResults(current_node, t_number)
         
         # Found the goal
         if current_node == end_node:
@@ -154,6 +170,9 @@ def aStar(maze, start, end, self_list, other_list, t_number):
 
         # Keeps track of the number of iterations
         counter+=1
+    # coordinateResults(current_node, t_number)
+
+
 
 
 def sayHello(name, thread_number):
@@ -176,7 +195,7 @@ def main():
             [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 8
             [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # 9
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]] # 10
-
+    
     start = (5, 0)
     end = (5,10)
     
