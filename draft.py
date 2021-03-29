@@ -38,13 +38,13 @@ def createPath(current_node, t_number):
     while current is not None:
         path.append(current.position)
         current = current.parent
-    # if t_number == 1:
-    #     return path[::-1] # Return reversed path
-    # else:
-    return path
+    if t_number == 1:
+        return path[::-1] # Return reversed path
+    else:
+        return path
 
 def BiAStar(maze, start, end):
-    # t1 = ThreadWithResult(target=sayHello, args=("Mariano",1))
+    # t1 = ThreadWithResult(target=sayHello, args=("Mariano",1,))
     # t2 = ThreadWithResult(target=sayHello, args=("Mariano",2,))
     list1 = []
     list2 = []
@@ -52,9 +52,11 @@ def BiAStar(maze, start, end):
     t2 = ThreadWithResult(target=aStar, args=(maze, end, start, list2, list1, 2))
     t1.start()
     t2.start()
-    
+    t1.join()
+    t2.join()
     print(t1.result)
     print(t2.result)
+    
 
 def aStar(maze, start, end, self_list, other_list, t_number):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
@@ -79,7 +81,7 @@ def aStar(maze, start, end, self_list, other_list, t_number):
 
     # Loop until you find the end
     while len(open_list) > 0:
-        
+        # print("#{}~Thread #{}".format(counter,t_number))
         # Get the current node
         current_node = open_list[0]
         current_index = 0
@@ -100,13 +102,10 @@ def aStar(maze, start, end, self_list, other_list, t_number):
         self_list.append(current_node.position)
         
         """Check if they have found the same node"""
-        mutex.acquire()
         if current_node.position in other_list:
             print("WE FOUND THE SAME NODE")
-            path = createPath(current_node, t_number)
-            mutex.release()
-            return path
-        mutex.release()
+            # path = createPath(current_node, t_number)
+            # return path
         
         # Found the goal
         if current_node == end_node:
