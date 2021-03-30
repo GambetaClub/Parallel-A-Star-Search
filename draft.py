@@ -1,8 +1,5 @@
-from threading import Thread
-from queue import Queue
-import time
-import threading, time
-from typing import final
+import threading
+from time import perf_counter
 
 finished = False
 
@@ -190,8 +187,13 @@ def main():
     start = (0,0)
     end = (0,5)
     
+    t1_start = perf_counter() 
     path = BiAStar(maze, start, end)
+    t1_stop = perf_counter()
+    
     print(path)
+    print("Elapsed time during the whole program in seconds:",
+                                        t1_stop-t1_start)
 
 
 if __name__ == '__main__':
