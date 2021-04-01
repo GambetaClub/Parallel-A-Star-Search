@@ -1,6 +1,10 @@
-import threading
-from time import perf_counter
+from threading import Thread, Lock
+from queue import Queue
+import time
+import threading, time, random
+from typing import final
 
+mutex = Lock()
 finished = False
 
 list1 = []
@@ -13,8 +17,15 @@ class ThreadWithResult(threading.Thread):
             self.result = target(*args, **kwargs)
         super().__init__(group=group, target=function, name=name, daemon=daemon)
 
+class Path():
+    def __init__(self, path=None, common_node=None, found=False):
+        self.path = path
+        self.common_node = common_node
+        self.found = found
+
 class Node():
     """A node class for A* Pathfinding"""
+
     def __init__(self, parent=None, position=None):
         self.parent = parent
         self.position = position
@@ -33,7 +44,6 @@ def isValidNode(maze, node):
 		return True
 
 def createPath(current_node, t_number):
-    """Creates path from the current node"""
     path = []
     current = current_node
     while current is not None:
@@ -44,12 +54,23 @@ def createPath(current_node, t_number):
     else:
         return path
 
-def coordinateResults(path1, path2):
-    """Coordinates both paths"""
-    temp = path1 + path2
-    final_list = []
-    [final_list.append(x) for x in temp if x not in final_list]
-    return final_list
+def coordinateResults(result1, result2):
+    final_path = []
+    if(result1.found):
+        print("THREAD #1 FOUND THE NODE IN COMMON")
+        final_path = result1.path
+        node_index = result2.path.index(result1.common_node.position)
+        useful_part = result1.path[node_index:]
+        final_path = final_path + useful_part
+    else:
+        print("THREAD #2 FOUND THE NODE IN COMMON")
+        final_path = result2.path
+        node_index = result1.path.index(result2.common_node.position)
+        useful_part = result1.path[:node_index]
+        final_path = useful_part + final_path
+        
+    return final_path
+
 
 def BiAStar(maze, start, end):
     t1 = ThreadWithResult(target=aStar, args=(maze, start, end, list1, list2, 1))
@@ -58,8 +79,7 @@ def BiAStar(maze, start, end):
     t2.start()
     t1.join()
     t2.join()
-    path = coordinateResults(t1.result, t2.result)
-    return path
+    return (coordinateResults(t1.result, t2.result))
         
 def aStar(maze, start, end, self_list, other_list, t_number):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
@@ -70,7 +90,6 @@ def aStar(maze, start, end, self_list, other_list, t_number):
     end_node = Node(None, end)
     end_node.g = end_node.h = end_node.f = 0
 	
-    # Check if both destination and origin are valid nodes
     if(not isValidNode(maze, start_node) or not isValidNode(maze, end_node)):
       print("The start and end nodes are not walkable nodes.")
       return 
@@ -86,10 +105,9 @@ def aStar(maze, start, end, self_list, other_list, t_number):
 
     # Loop until you find the end
     while len(open_list) > 0 and not finished:
-        
-        # This print statement is necessary for the functioning
-        print("Thread #{} is working...".format(t_number))
-        
+    
+        # This print statement is necessary. Don't delete it
+        print("Working...")
         # Get the current node
         current_node = open_list[0]
         current_index = 0
@@ -97,8 +115,7 @@ def aStar(maze, start, end, self_list, other_list, t_number):
         # Loop until open list is empty
         if(len(open_list) > 1):
             
-            # Loop through all nodes in open list and 
-            # grabs the one with smallest f
+            # Loop through all nodes in open list
             for index, item in enumerate(open_list):
                     
                 if item.f < current_node.f:
@@ -108,18 +125,17 @@ def aStar(maze, start, end, self_list, other_list, t_number):
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
         closed_list.append(current_node)
-        self_list.append(current_node.position)
+        self_list.append(current_node)
         
-        # Check if threads have found the same node and return
-        # the path created so far
-        if current_node.position in other_list:
+        """Check if they have found the same node"""
+        if current_node in other_list:
             finished = True
-            path = createPath(current_node, t_number)
+            path = Path(createPath(current_node, t_number), current_node, True)
             return path
         
         # Found the goal
         if current_node == end_node:
-            path = createPath(current_node, t_number)
+            path = Path(createPath(current_node, t_number), current_node)
             return path
             
         # Generate children
@@ -164,14 +180,12 @@ def aStar(maze, start, end, self_list, other_list, t_number):
 
         # Keeps track of the number of iterations
         counter+=1
-    
-    # Return if the other thread found the same node
     if finished:
-        path = createPath(current_node, t_number)
+        path = Path(createPath(current_node, t_number), current_node)
         return path
-
+    
+    
 def main():
-		#    0  1  2  3  4  5  6  7  8  9  10	
     maze = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1], # 0
             [1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1], # 1
             [0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1], # 2
@@ -182,19 +196,39 @@ def main():
             [0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0], # 7
             [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0], # 8
             [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 9
-            [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0]] # 10
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 10
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 11
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 12
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 13
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 14
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 15
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 16
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 17
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 18
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 19
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 20
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 21
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 22
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 23
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 24
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 25
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 26
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 27
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 28
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 29
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 30
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 31
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 32
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 33
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 34
+            [0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0], # 35
+            [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0]] # 36
     
     start = (0,0)
-    end = (0,5)
+    end = (36,10)
     
-    t1_start = perf_counter() 
     path = BiAStar(maze, start, end)
-    t1_stop = perf_counter()
-    
     print(path)
-    print("Elapsed time during the whole program in seconds:",
-                                        t1_stop-t1_start)
-
 
 if __name__ == '__main__':
     main()
