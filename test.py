@@ -25,8 +25,8 @@ def test2(p_time, s_time):
 
 def main():
 
-    Popen('python source.py')
-    Popen('python draft.py')
+    Popen('python sequential.py')
+    Popen('python parallel.py')
     
     time.sleep(3)
     
