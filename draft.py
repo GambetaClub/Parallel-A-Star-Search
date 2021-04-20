@@ -1,15 +1,19 @@
-from threading import Thread, Lock
-from queue import Queue
-import time
-import threading, time, random
-from typing import final
+from time import perf_counter
+import threading
+from variables import maze, start, end
 
-mutex = Lock()
 finished = False
 
 list1 = []
 list2 = []
 
+
+def writeResult(path, time):
+    file = open("parallel_result.py", "w")
+    file.write("%s = %s\n" %("path", path))
+    file.write("%s = %s\n" %("time", time))
+    file.close()
+    
 
 class ThreadWithResult(threading.Thread):
     def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None):
@@ -57,13 +61,11 @@ def createPath(current_node, t_number):
 def coordinateResults(result1, result2):
     final_path = []
     if(result1.found):
-        print("THREAD #1 FOUND THE NODE IN COMMON")
         final_path = result1.path
         node_index = result2.path.index(result1.common_node.position)
         useful_part = result1.path[node_index:]
         final_path = final_path + useful_part
     else:
-        print("THREAD #2 FOUND THE NODE IN COMMON")
         final_path = result2.path
         node_index = result1.path.index(result2.common_node.position)
         useful_part = result1.path[:node_index]
@@ -107,7 +109,7 @@ def aStar(maze, start, end, self_list, other_list, t_number):
     while len(open_list) > 0 and not finished:
     
         # This print statement is necessary. Don't delete it
-        print("Working...")
+        print('', end='')
         # Get the current node
         current_node = open_list[0]
         current_index = 0
@@ -183,52 +185,16 @@ def aStar(maze, start, end, self_list, other_list, t_number):
     if finished:
         path = Path(createPath(current_node, t_number), current_node)
         return path
-    
+ 
     
 def main():
-    maze = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1], # 0
-            [1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1], # 1
-            [0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1], # 2
-            [0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1], # 3
-            [0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1], # 4
-            [0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1], # 5
-            [0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0], # 6
-            [0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0], # 7
-            [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0], # 8
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 9
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 10
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 11
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 12
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 13
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 14
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 15
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 16
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 17
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 18
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 19
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 20
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 21
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 22
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 23
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 24
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 25
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 26
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 27
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 28
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 29
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 30
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 31
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 32
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 33
-            [0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], # 34
-            [0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0], # 35
-            [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0]] # 36
-    
-    start = (0,0)
-    end = (36,10)
-    
+    t1_start = perf_counter()
     path = BiAStar(maze, start, end)
-    print(path)
+    t1_stop = perf_counter()
+    
+    time = t1_stop-t1_start
+    
+    writeResult(path, time)
 
 if __name__ == '__main__':
     main()
