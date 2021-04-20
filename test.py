@@ -19,9 +19,9 @@ def test2(p_time, s_time):
     
     time_dif = abs(p_time - s_time)
     if(p_time > s_time):
-        print("The time execution of the sequential program was better by", time_dif)
+        print(f"The time execution of the parallel program was slower by {time_dif} seconds.")
     else:
-        print("The time execution of the parallel program was better by", time_dif)
+        print(f"The time execution of the parallel program was faster by {time_dif} seconds.")
 
 def main():
 
