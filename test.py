@@ -13,6 +13,8 @@ def printPaths(parallel, sequential):
     print("Parallel path\n", parallel)
     print("Sequential path\n", sequential)
 
+# Checks if the path is the right one 
+# based on the path stored in variables
 def test0(parallel):
     from variables import right_answer
     if(parallel != right_answer):
@@ -20,15 +22,15 @@ def test0(parallel):
     else:
         print("\nThe parallel program found the right answer.")
     
-    
+# Checks if both paths are equal
 def test1(sequential, parallel):
     if(comparePaths(parallel, sequential)):
         print("\nBoth paths are equal.\n")
     else:
         print("\nBoth paths are not equal\n.")
 
+# Checks the timings of both programms
 def test2(s_time, p_time):
-    
     time_dif = abs(p_time - s_time)
     ideal_time = s_time/n_processes
     speedup = s_time/p_time
